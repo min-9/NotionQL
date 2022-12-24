@@ -1,0 +1,1078 @@
+directive @key(fields: String!) on OBJECT | INTERFACE
+
+directive @extends on OBJECT | INTERFACE
+
+directive @external on OBJECT | FIELD_DEFINITION
+
+directive @requires(fields: String!) on FIELD_DEFINITION
+
+directive @provides(fields: String!) on FIELD_DEFINITION
+
+interface ObjectNode {
+  object: Object!
+  id: ID!
+}
+
+interface TypeNode {
+  type: Type
+}
+
+input RichTextInput {
+  text: NotionTextInput
+}
+
+interface RichText {
+  type: Type
+  plain_text: String
+  href: String
+  annotations: NotionAnnotation
+}
+
+type NotionUrl implements TypeNode {
+  type: Type
+  url: String
+}
+
+type NotionText {
+  content: String
+  link: NotionUrl
+}
+
+input NotionTextInput {
+  content: String
+}
+
+type RichTextText implements RichText & TypeNode {
+  # text
+  type: Type
+  plain_text: String
+  href: String
+  annotations: NotionAnnotation
+  text: NotionText
+}
+
+type RichTextMention implements RichText & TypeNode {
+  type: Type!
+  plain_text: String
+  href: String
+  annotations: NotionAnnotation
+}
+
+type RichTextEquationEquation {
+  expression: String
+}
+
+type RichTextEquation implements RichText & TypeNode {
+  type: Type
+  plain_text: String
+  href: String
+  annotations: NotionAnnotation
+  equation: RichTextEquationEquation
+}
+
+type NotionAnnotation {
+  bold: Boolean
+  italic: Boolean
+  strikethrough: Boolean
+  underline: Boolean
+  code: Boolean
+  color: String
+}
+
+input PropertyEdgeInput {
+  # key
+  name: String
+
+  # value
+  node: PropertyValueInput
+}
+
+input PropertyValueInput {
+  title: [RichTextInput]
+  rich_text: [RichTextInput]
+  number: Float
+  select: SelectInput
+  multi_select: [SelectInput]
+  date: String
+}
+
+interface PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+}
+
+interface PropertyValueElement {
+  type: PropertyValueType!
+}
+
+enum PropertyValueType {
+  rich_text
+  number
+  select
+  multi_select
+  date
+  formula
+  relation
+  rollup
+  title
+  people
+  files
+  checkbox
+  url
+  email
+  phone_number
+  created_time
+  created_by
+  last_edited_time
+  last_edited_by
+  status
+}
+
+# Title property value objects contain an array of rich text objects within the title property.
+type TitlePropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  title: [RichText]
+}
+
+type TitlePropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  title: [RichText]
+}
+
+input TitlePropertyInput {
+  title: [RichTextInput]
+}
+
+# Rich Text property value objects contain an array of rich text objects within the rich_text property.
+type RichTextPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  rich_text: [RichText]
+}
+
+type RichTextPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  rich_text: [RichText]
+}
+
+# Number property value objects contain a number within the number property.
+type NumberPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  number: Float
+}
+
+type NumberPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  number: Float
+}
+
+#
+type SelectPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  select: SelectOption
+}
+
+type SelectPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  select: SelectOption
+}
+
+input SelectPropertyInput {
+  select: SelectInput
+}
+
+input SelectInput {
+  name: String
+}
+
+#
+type MultiSelectPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  multi_select: [SelectOption]
+}
+
+type MultiSelectPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  multi_select: [SelectOption]
+}
+
+type DateProperty {
+  start: DateTime
+  end: DateTime
+}
+
+type DatePropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  date: DateProperty
+}
+
+type DatePropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  date: DateProperty
+}
+
+# https://developers.notion.com/reference/page#formula-property-values
+# Formula property value objects represent the result of evaluating a formula described in the
+# database's properties. These objects contain a type key and a key corresponding with the value of type. The value is an object containing type-specific data. The type-specific data are described in the sections below.
+interface FormulaPropertyValue {
+  id: ID!
+  type: FormulaPropertyValueType!
+}
+
+enum FormulaPropertyValueType {
+  string
+  number
+  boolean
+  date
+}
+
+# String formulaPropertyValue contain an optional string within the string property.
+type StringFormulaPropertyValue implements FormulaPropertyValue {
+  id: ID!
+  type: FormulaPropertyValueType!
+  string: String
+}
+
+type NumberFormulaPropertyValue implements FormulaPropertyValue {
+  id: ID!
+  type: FormulaPropertyValueType!
+  number: Float
+}
+
+type BooleanFormulaPropertyValue implements FormulaPropertyValue {
+  id: ID!
+  type: FormulaPropertyValueType!
+  boolean: Boolean
+}
+
+type DateFormulaPropertyValue implements FormulaPropertyValue {
+  id: ID!
+  type: FormulaPropertyValueType!
+  date: DateTime
+}
+
+# Relation property value objects contain an array of page references within the relation property. A page reference is an object with an id property, with a string value (UUIDv4) corresponding to a page ID in another database.
+type RelationPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  relation: RelationConnection
+}
+
+type RelationPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  relation: RelationConnection
+}
+
+type RelationConnection {
+  edges: [RelationEdge]
+}
+
+type RelationEdge {
+  node: Page
+}
+
+# Rollup property value objects represent the result of evaluating a rollup described in the
+# database's properties. These objects contain a type key and a key corresponding with the value of type. The value is an object containing type-specific data. The type-specific data are described in the sections below.
+type RollupPropertyValue {
+  id: ID!
+}
+
+type NumberRollupPropertyValue {
+  id: ID!
+}
+
+type DateRollupPropertyValue {
+  id: ID!
+}
+
+# Array rollupPropertyValue contain an array of element objects within the array property.
+type ArrayRollupPropertyValue {
+  array: [RollupPropertyValueElement]
+}
+
+interface RollupPropertyValueElement {
+  type: String
+}
+
+type PeoplePropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  people: [User]
+}
+
+type PeoplePropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  people: [User]
+}
+
+type FilesPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  files: [String]
+}
+
+type FilesPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  files: [String]
+}
+
+type CheckboxPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  checkbox: Boolean
+}
+
+type CheckboxPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  checkbox: Boolean
+}
+
+type URLPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  url: URL
+}
+
+type URLPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  url: URL
+}
+
+type EmailPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  email: EmailAddress
+}
+
+type EmailPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  email: EmailAddress
+}
+
+type PhoneNumberPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  phone_number: JSON
+}
+
+type PhoneNumberPropertyElement implements PropertyValueElement {
+  type: PropertyValueType!
+  phone_number: JSON
+}
+
+type CreatedTimePropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  created_time: DateTime
+}
+
+type CreatedTimePropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  created_time: DateTime
+}
+
+type CreatedByPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  created_by: User
+}
+
+type CreatedByPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  created_by: User
+}
+
+type LastEditedTimePropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  last_edited_time: DateTime
+}
+
+type LastEditedTimePropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  last_edited_time: DateTime
+}
+
+type LastEditedByPropertyValue implements PropertyValue {
+  id: ID!
+  type: PropertyValueType!
+  last_edited_by: User
+}
+
+type LastEditedByPropertyValueElement implements PropertyValueElement {
+  type: PropertyValueType!
+  last_edited_by: User
+}
+
+# A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar DateTime
+
+# A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar Date
+
+# A time string at UTC, such as 10:15:30Z, compliant with the `full-time` format outlined in section 5.6 of the RFC 3339profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar Time
+
+# A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
+scalar URL
+
+scalar EmailAddress
+
+# The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+scalar JSON
+
+# The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+scalar JSONObject
+
+enum NotionColor {
+  default
+  gray
+  brown
+  orange
+  yellow
+  green
+  blue
+  purple
+  pink
+  red
+}
+
+enum NotionBackgroundColor {
+  gray_background
+  brown_background
+  orange_background
+  yellow_background
+  green_background
+  blue_background
+  purple_background
+  pink_background
+  red_background
+}
+
+enum Object {
+  list
+  block
+  page
+  database
+  user
+  workspace
+}
+
+enum Type {
+  paragraph
+  heading_1
+  heading_2
+  heading_3
+  bulleted_list_item
+  numbered_list_item
+  to_do
+  toggle
+  unsupported
+  child_page
+  database_id
+  page_id
+  workspace
+  rich_text
+  text
+  boolean
+  number
+  formula
+  multi_select
+  select
+  files
+  array
+  rollup
+  date
+  people
+  checkbox
+  email
+  phone_number
+  created_time
+  created_by
+  last_edited_time
+  last_edited_by
+  url
+  mention
+  user
+  person
+  bot
+  page
+  database
+  equation
+}
+
+input ListBlockChildrenInput {
+  blockId: ID!
+}
+
+input CreateBlockInput {
+  type: BlockType
+}
+
+enum BlockType {
+  paragraph
+  heading_1
+  heading_2
+  heading_3
+  bulleted_list_item
+  numbered_list_item
+  to_do
+  toggle
+  child_page
+  unsupported
+}
+
+interface Block {
+  id: ID!
+  object: Object
+  type: BlockType
+  createdTime: String
+  last_edited_time: String
+  has_children: Boolean
+}
+
+interface BlockWithChildren {
+  object: Object
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  has_children: Boolean
+  children: [Block]
+}
+
+interface BlockWithText {
+  object: Object
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  has_children: Boolean
+  text: [RichText]
+}
+
+type Text {
+  text: [RichText]
+}
+
+type ParagraphBlock implements Block & ObjectNode & BlockWithChildren {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  text: [RichText]
+  paragraph: Text
+  has_children: Boolean
+  children: [Block]
+}
+
+type HeadingOneBlock implements Block & ObjectNode & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  heading_1: Text
+  text: [RichText]
+  has_children: Boolean
+}
+
+type HeadingTwoBlock implements Block & ObjectNode & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  text: [RichText]
+  heading_2: Text
+  has_children: Boolean
+}
+
+type HeadingThreeBlock implements Block & ObjectNode & BlockWithText {
+  object: Object!
+  id: ID!
+  type: BlockType!
+  createdTime: String
+  last_edited_time: String
+  heading_3: Text
+  text: [RichText]
+  has_children: Boolean
+}
+
+type TextAndChildren {
+  text: [RichText]
+}
+
+type BulletedListItemBlock implements Block & BlockWithChildren & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  bulleted_list_item: TextAndChildren
+  text: [RichText]
+  has_children: Boolean
+  children: [Block]
+}
+
+type NumberedListItemBlock implements Block & BlockWithChildren & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  numbered_list_item: TextAndChildren
+  text: [RichText]
+  has_children: Boolean
+  children: [Block]
+}
+
+type ToDo {
+  text: [RichText]
+  checked: Boolean
+  children: [Block]
+}
+
+type ToDoBlock implements Block & BlockWithChildren & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  to_do: ToDo
+  text: [RichText]
+  checked: Boolean
+  has_children: Boolean
+  children: [Block]
+}
+
+type ToggleBlock implements Block & BlockWithChildren & BlockWithText {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  toggle: TextAndChildren
+  text: [RichText]
+  has_children: Boolean
+  children: [Block]
+}
+
+type ChildPage {
+  title: String
+}
+
+type ChildPageBlock implements Block {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  type: BlockType!
+  child_page: ChildPage
+  has_children: Boolean
+  title: String
+}
+
+type UnsupportedBlock implements Block {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  has_children: Boolean
+  type: BlockType!
+}
+
+type Database implements ObjectNode {
+  object: Object!
+  id: ID!
+  createdTime: String
+  last_edited_time: String
+  title: [RichText]
+  properties: DatabasePropertiesConnection
+  entries: EntriesConnection
+}
+
+type EntriesConnection {
+  edges: [EntryEdge]
+}
+
+type EntryEdge {
+  node: Page
+}
+
+input DatabaseInput {
+  databaseId: ID!
+}
+
+input ListDatabasesInput {
+  startCursor: String
+  pageSize: Int
+}
+
+type DatabasePropertiesConnection {
+  edges: [DatabasePropertyEdge]
+}
+
+type DatabasePropertyEdge {
+  name: String
+  node: Configuration
+}
+
+enum DataBasePropertyConfigurationType {
+  title
+  rich_text
+  number
+  select
+  multi_select
+  date
+  people
+  file
+  checkbox
+  url
+  email
+  phone_number
+  formula
+  relation
+  rollup
+  created_time
+  created_by
+  last_edited_time
+  last_edited_by
+}
+
+enum NumberFormat {
+  number
+  number_with_commas
+  percent
+  dollar
+  euro
+  pound
+  byen
+  ruble
+  rupee
+  won
+  yuan
+}
+
+interface Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+}
+
+type TitleConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  title: JSON
+}
+
+# Text database property objects have no additional configuration within the rich_text property.
+type TextConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  rich_text: RichText
+}
+
+# Number database property objects contain the following configuration within the number property:
+type NumberConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  number: Number
+}
+
+type Number {
+  format: NumberFormat
+}
+
+interface Select {
+  options: [SelectOption]
+}
+
+# Select database property objects contain the following configuration within the select property:
+type SelectConfiguration implements Configuration & Select {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  options: [SelectOption]
+  select: SelectProperty
+}
+
+type SelectProperty {
+  options: [SelectOption]
+}
+
+type SelectOption {
+  # Name of the option as it appears in Notion.
+  name: String
+  id: ID!
+  color: NotionColor
+}
+
+type MultiSelectConfiguration implements Configuration & Select {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  multi_select: SelectProperty
+  options: [SelectOption]
+}
+
+type DateConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  date: Date
+}
+
+type PeopleConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  people: JSON
+}
+
+type FileConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  file: JSON
+}
+
+type CheckboxConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  checkbox: JSON
+}
+
+type URLConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  url: JSON
+}
+
+type EmailConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  email: JSON
+}
+
+type PhoneNumberConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  phone_number: JSON
+}
+
+type FormulaConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  formula: Formula
+}
+
+type Formula {
+  expression: String
+}
+
+# Relation database property objects contain the following configuration within the relation property:
+type RelationConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  relation: Relation
+}
+
+type Relation {
+  # The database this relation refers to. New linked pages must belong to this database in order to be valid.
+  database_id: ID!
+
+  # By default, relations are formed as two synced properties across databases: if you make a change to one property, it updates the synced property at the same time. synced_property_name refers to the name of the property in the related database.
+  synced_property_name: String
+
+  # By default, relations are formed as two synced properties across databases: if you make a change to one property, it updates the synced property at the same time. synced_property_id refers to the id of the property in the related database. This is usually a short string of random letters and symbols.
+  synced_property_id: String
+  database: Database
+}
+
+# Rollup database property objects contain the following configuration within the rollup property:
+type RollupConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  rollup: Rollup
+}
+
+type Rollup {
+  relation_property_name: String
+  relation_property_id: String
+  rollup_property_name: String
+  rollup_property_id: String
+  function: String
+}
+
+enum RollupFunction {
+  count_all
+  count_values
+  count_unique_values
+  count_empty
+  count_not_empty
+  percent_empty
+  percent_not_empty
+  sum
+  average
+  median
+  min
+  max
+  range
+}
+
+# Created time database property objects have no additional configuration within the created_time property.
+type CreatedTimeConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  created_time: Time
+}
+
+# Created by database property objects have no additional configuration within the created_by property.
+type CreatedByConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  created_by: JSON
+}
+
+# Last edited time database property objects have no additional configuration within the last_edited_time property.
+type LastEditedTimeConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  last_edited_time: Time
+}
+
+# Last edited by database property objects have no additional configuration within the last_edited_by property.
+type LastEditedByConfiguration implements Configuration {
+  id: ID!
+  type: DataBasePropertyConfigurationType!
+  last_edited_by: JSON
+}
+
+type Page implements ObjectNode & PageParent {
+  object: Object!
+  id: ID!
+  created_time: DateTime
+  last_edited_time: DateTime
+  archived: Boolean
+  properties: PagePropertiesConnection
+  content: [Block]
+  parent: PageParent
+}
+
+type PagePropertiesConnection {
+  edges: [PagePropertyEdge]
+}
+
+type PagePropertyEdge {
+  # key
+  name: String
+
+  # value
+  node: PropertyValue
+}
+
+enum ParentType {
+  page_id
+  database_id
+  workspace
+}
+
+interface PageParent {
+  object: Object!
+}
+
+type Workspace implements PageParent {
+  object: Object!
+  isWorkspace: Boolean
+}
+
+input PageInput {
+  pageId: String
+}
+
+input CreatePageInput {
+  # A database parent or page parent
+  parent: ParentInput!
+
+  # Property values of this page. The keys are the names or IDs of the property and the values are property values.
+  properties: [PropertyEdgeInput!]!
+
+  # Page content for the new page as an array of block objects
+  children: [CreateBlockInput]
+}
+
+input ParentInput {
+  database_id: ID
+  page_id: ID
+}
+
+input UpdatePagePropertiesInput {
+  page_id: ID!
+  properties: [PropertyEdgeInput!]!
+}
+
+type PersonEmail {
+  email: EmailAddress
+}
+
+type Person implements User & ObjectNode & TypeNode {
+  object: Object!
+  type: Type!
+  id: ID!
+  person: PersonEmail
+  name: String
+  avatar_url: URL
+}
+
+type Bot implements User & ObjectNode {
+  object: Object!
+  type: Type!
+  id: ID!
+  name: String
+  avatar_url: URL
+}
+
+interface User {
+  object: Object!
+  type: Type!
+  id: ID!
+  name: String
+  avatar_url: URL
+}
+
+input NotioUserInput {
+  userId: String
+}
+
+type PaginatedList {
+  object: Object!
+  results: [ObjectNode]
+  hasMore: Boolean
+  next_cursor: String
+}
+
+type Query {
+  _service: _Service!
+  search(input: SearchInput): PaginatedList
+  listBlockChildren(input: ListBlockChildrenInput): [Block]
+  database(input: DatabaseInput!): Database
+  listDatabases(input: ListDatabasesInput): [Database]
+  page(input: PageInput): Page
+  notionUser(input: NotioUserInput!): User
+  listUsers: [User]
+}
+
+type _Service {
+  # The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  sdl: String
+}
+
+input SearchInput {
+  query: String
+  sort: String
+  filter: String
+}
+
+type Mutation {
+  createPage(input: CreatePageInput!): Page
+  updatePageProperties(input: UpdatePagePropertiesInput!): Page
+}
